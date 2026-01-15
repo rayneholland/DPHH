@@ -24,16 +24,16 @@ private:
 
 public:
     CSSOHH(int depth, double epsilon, double delta, int k, int tilde_k, uint32_t seed_index, uint32_t seed_sign, size_t T)
-        : k_(k), tilde_k_(tilde_k), eps_(epsilon), delta_(delta), heap(tilde_k_) {
+        : k_(k), tilde_k_(tilde_k),  eps_(epsilon), delta_(delta), heap(tilde_k) {
         int min_d;
-        min_d = static_cast<int>(log(6.0*static_cast<double>(T)/(delta_))) +1;
+        min_d = static_cast<int>(log(4.0*static_cast<double>(T)/(delta_))) +1;
 
         if(depth < min_d) {
             depth_ = min_d;
         } else {
             depth_ = depth;
         }
-        sketch = new CSSO(2*tilde_k, depth_, epsilon, seed_index, seed_sign);
+        sketch = new CSSO(3*tilde_k, depth_, epsilon, seed_index, seed_sign);
     }
 
     ~CSSOHH() override {
@@ -66,12 +66,14 @@ public:
 
         double freq_error = eta * sqrt(F2_upper / static_cast<double>(tilde_k_));
 
-        double additive_error = 2 * (noise + freq_error);
+        double additive_error = 3 * (noise + freq_error);
 
         const auto n_double = static_cast<double>(n_);
         const double tau_1 = n_double / static_cast<double>(k_);
         const double tau_2 = n_double / static_cast<double>(tilde_k_) + 1.0 + additive_error;
         const double tau = max(tau_1, tau_2);
+
+        // printf("noise: %.2f, tau_1: %.2f, tau_2 %.2f\n", noise, tau_1, tau_2);
 
         for (auto &p : heap.items()) {
             double est = sketch->query(p.first);

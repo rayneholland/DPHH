@@ -189,7 +189,7 @@ static constexpr double TILDE_K_FACTOR = 2;
 
 static constexpr int DEFAULT_K   = 128;
 static constexpr int DEFAULT_K_CAIDA   = 256;
-static constexpr int DEFAULT_K_CAIDA_FIXED = 1024;
+static constexpr int DEFAULT_K_CAIDA_FIXED = 512;
 static constexpr double DEFAULT_EPS  = 0.1;
 static constexpr double DEFAULT_SKEW = 1.1;
 static constexpr double DEFAULT_SKEW_EPS = 1.1;
@@ -209,7 +209,7 @@ void runHHAlgorithmsAgg(std::ofstream& ofs,
     auto run_and_aggregate =
         [&](const std::string& name,
             auto&& make_algo,
-            size_t tilde_k,
+            size_t tilde_k_local,
             double delta,
             int depth,
             int seed)
@@ -231,7 +231,7 @@ void runHHAlgorithmsAgg(std::ofstream& ofs,
         auto p = computeStats(prec);
         auto r = computeStats(rec);
 
-        ofs << name << "," << k << "," << tilde_k << ","
+        ofs << name << "," << k << "," << tilde_k_local << ","
             << eps << "," << delta << ","
             << depth << "," << seed << ","
             << skew << "," << stream_length << ","
@@ -251,6 +251,7 @@ void runHHAlgorithmsAgg(std::ofstream& ofs,
                   << " P=" << p.mean
                   << " R=" << r.mean << std::endl;
     };
+
 
     // -------- MGSO --------
     run_and_aggregate(
@@ -277,7 +278,7 @@ void runHHAlgorithmsAgg(std::ofstream& ofs,
             int seed = rand();
             return std::make_unique<CMSSOHH>(
                 DEFAULT_DEPTH, eps, DEFAULT_DELTA,
-                k, tilde_k, seed, stream_length
+                k, 2*tilde_k, seed, stream_length
             );
         },
         tilde_k, 0.0, DEFAULT_DEPTH, DEFAULT_SEED
@@ -289,7 +290,7 @@ void runHHAlgorithmsAgg(std::ofstream& ofs,
         [&]() {
             return std::make_unique<CSSOHH>(
                 DEFAULT_DEPTH, eps, DEFAULT_DELTA,
-                k, tilde_k, rand(), rand(), stream_length
+                k, 2*tilde_k, rand(), rand(), stream_length
             );
         },
         tilde_k, 0.0, DEFAULT_DEPTH, DEFAULT_SEED
@@ -397,13 +398,13 @@ void runHHExperiments(
 
 void runHHExperimentsCaida(
     const std::string& caida_csv =
-        "insert_caida_file_path.csv",
+        "C:/Users/HOL446/CLionProjects/CODPSketches/data/packet_capture.csv",
     const std::string& out_csv = "hh_experiments_caida.csv"
 ) {
     // Parameter grids (same as synthetic experiments)
     const std::vector<int>    k_grid   = {128, 256, 512, 1024, 2048, 4096};
     const std::vector<double> eps_grid = {0.001, 0.01, 0.1, 1.0, 10.0};
-    const std::vector<int> k_tilde_factor_grid = {1,2,3,4,5,6};
+    const std::vector<int> k_tilde_factor_grid = {1,2,4,8,16};
 
     // ------------------------------------------------------------
     // Load CAIDA stream (source IPs)
@@ -515,7 +516,7 @@ void runHHExperimentsCaida(
     }
 
     // ============================================================
-    // 2) Sweep over tilde_k (k fixed)
+    // 3) Sweep over tilde_k (k fixed)
     // ============================================================
     {
         const int    k    = DEFAULT_K_CAIDA_FIXED;
@@ -547,7 +548,7 @@ int main() {
 
     runHHExperiments();
 
-    // runHHExperimentsCaida();
+    runHHExperimentsCaida();
 
     return 0;
 }

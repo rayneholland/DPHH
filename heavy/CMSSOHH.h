@@ -25,9 +25,9 @@ private:
 
 public:
     CMSSOHH(int depth, double epsilon, double delta, int k, int tilde_k, uint32_t seed, size_t T)
-        : k_(k), tilde_k_(tilde_k), eps_(epsilon), delta_(delta), heap(tilde_k) {
+        : k_(k), tilde_k_(tilde_k),  eps_(epsilon), delta_(delta), heap(tilde_k) {
         int min_d;
-        min_d = static_cast<int>(log(6.0*static_cast<double>(T)/(delta_))) +1;
+        min_d = static_cast<int>(log(4.0*(static_cast<double>(T)+tilde_k)/(delta_))) +1;
 
         if(depth < min_d) {
             depth_ = min_d;
@@ -59,12 +59,14 @@ public:
         vector<pair<int,double>> out;
 
         double noise;
-        noise = (2.0 * depth_ / eps_) * log(6.0*depth_*static_cast<double>(tilde_k_) / delta_);
+        noise = (2.0 * depth_ / eps_) * log(4.0*depth_*static_cast<double>(tilde_k_) / delta_);
 
         const auto n_double = static_cast<double>(n_);
         const double tau_1 = n_double / static_cast<double>(k_);
-        const double tau_2 = 2*n_double / static_cast<double>(tilde_k_) + 1.0 + 2*noise;
+        const double tau_2 = 3*n_double / static_cast<double>(tilde_k_) + 1.0 + 3*noise;
         const double tau = max(tau_1, tau_2);
+
+        // printf("noise: %.2f, tau_1: %.2f, tau_2 %.2f\n", noise, tau_1, tau_2);
 
         for (auto &p : heap.items()) {
             double est = sketch->query(p.first);
